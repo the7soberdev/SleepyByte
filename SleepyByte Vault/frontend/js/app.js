@@ -6,6 +6,45 @@ const modules = [
   ["System", [["Integrations","/integrations"],["Settings","/settings"],["Diagnostics","/diagnostics"],["About SleepyByte","/about"]]],
 ];
 const all = modules.flatMap(([section, items]) => items.map(([title,path]) => ({section,title,path})));
+const moduleInfo = {
+  "/investigations": [2, "Create and organize cases, track activity, and keep related research together."],
+  "/entities": [2, "Review domains, addresses, accounts, and other identifiers collected during research."],
+  "/evidence": [2, "Keep source records, file hashes, timestamps, and provenance with each piece of evidence."],
+  "/notes": [2, "Write case-scoped analyst notes and link observations to the entities they describe."],
+  "/reports": [6, "Turn case notes and sourced findings into shareable reports."],
+  "/tools/username": [5, "Check a username across public profile pages. The existing scanner checks Discord, GitHub, Reddit, and several public platforms."],
+  "/tools/email": [3, "Planned checks include syntax, domain mail records, SPF, DMARC, and optional breach-provider results."],
+  "/tools/domain": [3, "Planned checks include DNS, registration data, certificate records, and security headers."],
+  "/tools/ip": [3, "Planned checks include address classification, reverse DNS, and ASN or registration details."],
+  "/tools/dns": [3, "Query common DNS record types and keep resolver and collection time alongside results."],
+  "/tools/url": [3, "Inspect URL components, normalize internationalized hostnames, and review redirect destinations safely."],
+  "/tools/certificates": [4, "Search certificate transparency data and review names and validity periods."],
+  "/tools/web": [4, "Search public web sources through configured search providers."],
+  "/tools/metadata": [3, "Inspect local files for MIME type, metadata, and cryptographic hashes."],
+  "/tools/image": [3, "Review image metadata and extract available capture time, camera, and location fields."],
+  "/tools/exposure": [5, "Monitor configured public sources for matches to identifiers you choose to track."],
+  "/tools/network": [3, "Look up public network ownership and routing information."],
+  "/tools/http": [4, "Review response headers and redirect behavior for a public URL."],
+  "/tools/tls": [4, "Inspect a TLS certificate chain, names, protocol, and expiry."],
+  "/tools/security-headers": [4, "Review common browser security headers and explain missing protections."],
+  "/tools/tech": [4, "Identify publicly observable web technologies from response signals."],
+  "/tools/passive": [4, "Collect passive asset references from configured public data sources."],
+  "/tools/subdomains": [4, "Organize discovered subdomains with source and first-seen details."],
+  "/tools/repos": [4, "Search public code repositories through configured GitHub or GitLab access."],
+  "/tools/ioc": [5, "Normalize batches of indicators and preserve a source for each enrichment."],
+  "/tools/hash": [3, "Calculate a file hash locally and compare it with configured reputation providers."],
+  "/tools/feeds": [5, "Browse and refresh configured threat feeds with source and update timestamps."],
+  "/tools/mitre": [5, "Search the MITRE ATT&CK knowledge base for tactics, techniques, and mitigations."],
+  "/analysis/graph": [5, "Explore relationships between case entities while keeping provenance on each edge."],
+  "/analysis/timeline": [5, "Review observations and case events in chronological order."],
+  "/analysis/correlation": [5, "Apply explicit, explainable rules to identify relationships between findings."],
+  "/analysis/enrichment": [5, "Run configured providers against a batch of selected indicators."],
+  "/analysis/findings": [2, "Review sourced findings across investigations."],
+  "/analysis/export": [6, "Export selected case data to portable formats."],
+  "/integrations": [6, "Configure optional providers and see their connection status."],
+  "/diagnostics": [7, "Review application health and diagnostic information."],
+  "/about": [0, "SleepyByte is a local-first OSINT and cyber-intelligence workbench."]
+};
 const root = document.querySelector("#view-root");
 const safe = (s) => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 function navigate(path){ location.hash = path; render(); document.querySelector("#app").classList.remove("sidebar-open"); }
@@ -15,7 +54,10 @@ function render(){
   document.querySelectorAll(".sidebar__item").forEach(a=>a.classList.toggle("active",a.dataset.path===path));
   if(path==="/overview" || path==="/") return dashboard();
   if(path==="/settings") return settings();
-  root.innerHTML=`<section class="placeholder-view"><div class="placeholder-view__icon">✦</div><span class="badge">${safe(page.section || "Workspace")}</span><h1>${safe(page.title)}</h1><p class="placeholder-view__desc">This module is ready to be connected to the SleepyByte backend.</p><button class="btn" data-home>Back to Overview</button></section>`;
+  const [phase, description] = moduleInfo[path] || [0, "Workspace for this module."];
+  const phaseText = phase ? `Planned · Phase ${phase}` : "Project information";
+  const usernameForm = path === "/tools/username" ? `<form class="module-form" action="/" method="post"><input type="hidden" name="module" value="username"><label for="username-target">Username or Discord ID</label><div class="module-form__row"><input id="username-target" name="target" required placeholder="e.g. sleepybyte"><button class="btn btn--primary" type="submit">Run public profile search</button></div><p class="muted">Results open in the existing scanner and come from public profile pages.</p></form>` : "";
+  root.innerHTML=`<div class="page-header"><div><span class="badge">${safe(page.section || "Workspace")}</span><h1>${safe(page.title)}</h1><p class="page-header__subtitle">${safe(description)}</p></div></div><section class="module-grid"><article class="card"><div class="card__title">Module overview</div><p class="module-copy">${safe(description)}</p><div class="module-status"><span class="dot ${path === "/tools/username" ? "dot--ok" : "dot--warn"}"></span>${path === "/tools/username" ? "Available now" : "Backend capability not connected yet"}</div></article><article class="card"><div class="card__title">Availability</div><p class="module-copy">${safe(phaseText)}</p><p class="muted">This page describes the intended workflow. Results will appear here when the module is implemented and connected; no sample results are presented as real findings.</p></article></section>${usernameForm}<button class="btn module-home" data-home>Back to Overview</button>`;
   root.querySelector("[data-home]").onclick=()=>navigate("/overview");
 }
 function dashboard(){
