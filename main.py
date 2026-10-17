@@ -6,10 +6,12 @@ from urllib.parse import urlparse
 from fastapi import FastAPI, Request, Form, UploadFile, File
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 import aiohttp
 
 app = FastAPI(title="SleepyByte Unified Reconnaissance Engine")
 templates = Jinja2Templates(directory="templates")
+app.mount("/workbench", StaticFiles(directory="SleepyByte Vault/frontend", html=True), name="workbench")
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0",
